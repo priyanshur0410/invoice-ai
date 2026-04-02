@@ -1,0 +1,52 @@
+name: Invoice AI CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Tesseract
+        run: sudo apt-get install -y tesseract-ocr
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt pytest pytest-asyncio
+
+      - name: Run tests
+        working-directory: backend
+        run: pytest tests/ -v
+        env:
+          DATABASE_URL: "sqlite+aiosqlite:///./test.db"
+          OPENAI_API_KEY: "sk-test"
+          SUPABASE_URL: "https://test.supabase.co"
+          SUPABASE_SERVICE_KEY: "test-key"
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install and build
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+        env:
+          VITE_API_URL: "https://invoice-ai-backend.onrender.com"
