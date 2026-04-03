@@ -12,7 +12,7 @@ from typing import Optional
 from openai import AsyncOpenAI
 from services.llm_service import LLMParsingService
 
-client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# client initialized lazily in _call_llm to avoid import-time crash in tests
 
 
 SYSTEM_PROMPT = """You are an expert invoice parser. Extract structured data from raw OCR text.
@@ -98,6 +98,7 @@ class LLMParsingService:
         return msg
 
     async def _call_llm(self, model: str, user_msg: str, system: str) -> Optional[dict]:
+        client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         resp = await client.chat.completions.create(
             model=model,
             messages=[
@@ -161,9 +162,10 @@ class LLMParsingService:
             return None
 
         total = find([
+            r"total\s+amount[:\s]+[\$£€]?\s*([\d,]+\.?\d*)",
+            r"grand\s+total[:\s]+[\$£€]?\s*([\d,]+\.?\d*)",
+            r"amount\s+due[:\s]+[\$£€]?\s*([\d,]+\.?\d*)",
             r"total[:\s]+[\$£€]?\s*([\d,]+\.?\d*)",
-            r"amount due[:\s]+[\$£€]?\s*([\d,]+\.?\d*)",
-            r"grand total[:\s]+[\$£€]?\s*([\d,]+\.?\d*)",
         ])
 
         return {
