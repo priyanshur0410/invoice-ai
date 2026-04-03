@@ -10,6 +10,7 @@ import re
 import os
 from typing import Optional
 from openai import AsyncOpenAI
+from services.llm_service import LLMParsingService
 
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
