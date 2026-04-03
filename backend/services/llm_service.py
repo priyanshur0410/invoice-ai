@@ -10,7 +10,6 @@ import re
 import os
 from typing import Optional
 from openai import AsyncOpenAI
-from services.llm_service import LLMParsingService
 
 # client initialized lazily in _call_llm to avoid import-time crash in tests
 
