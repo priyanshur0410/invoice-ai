@@ -9,11 +9,16 @@ on:
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Tesseract
         run: sudo apt-get install -y tesseract-ocr
+        working-directory: .
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -21,20 +26,24 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        working-directory: backend
-        run: pip install -r requirements.txt pytest pytest-asyncio
+        run: pip install -r requirements.txt pytest pytest-asyncio aiosqlite
 
       - name: Run tests
-        working-directory: backend
-        run: pytest tests/ -v
+        run: pytest tests/ -v --asyncio-mode=auto
         env:
+          PYTHONPATH: ${{ github.workspace }}/backend
           DATABASE_URL: "sqlite+aiosqlite:///./test.db"
           OPENAI_API_KEY: "sk-test"
           SUPABASE_URL: "https://test.supabase.co"
           SUPABASE_SERVICE_KEY: "test-key"
+          SUPABASE_BUCKET: "invoices"
 
   build-frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
     steps:
       - uses: actions/checkout@v4
 
@@ -44,7 +53,6 @@ jobs:
           node-version: "20"
 
       - name: Install and build
-        working-directory: frontend
         run: |
           npm install
           npm run build
